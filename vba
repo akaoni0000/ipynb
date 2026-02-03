@@ -1,44 +1,41 @@
-Sub GetFirstPostedMonth_Array()
+Sub CreatePivot()
 
-    Dim ws As Worksheet
-    Set ws = ActiveSheet
+    Dim srcWs As Worksheet
+    Dim ptWs As Worksheet
+    Dim pc As PivotCache
+    Dim pt As PivotTable
+    Dim srcRange As Range
 
-    Dim lastRow As Long
-    lastRow = ws.Cells(ws.Rows.Count, 1).End(xlUp).Row
+    ' 元データ
+    Set srcWs = Worksheets("Sheet1")
+    Set srcRange = srcWs.Range("A1").CurrentRegion
 
-    ' --- データを一気に配列へ読み込み ---
-    Dim data As Variant
-    data = ws.Range("A2:B" & lastRow).Value   ' 2次元配列（1始まり）
+    ' ピボット用シート
+    Set ptWs = Worksheets("Sheet2")
+    ptWs.Cells.Clear
 
-    Dim dict As Object
-    Set dict = CreateObject("Scripting.Dictionary")
+    ' ピボットキャッシュ作成
+    Set pc = ThisWorkbook.PivotCaches.Create( _
+        SourceType:=xlDatabase, _
+        SourceData:=srcRange _
+    )
 
-    Dim i As Long
-    Dim ym As Long
-    Dim slipNo As String
+    ' ピボットテーブル作成
+    Set pt = pc.CreatePivotTable( _
+        TableDestination:=ptWs.Range("A1"), _
+        TableName:="SamplePivot" _
+    )
 
-    ' --- 初回計上年月を作る ---
-    For i = 1 To UBound(data, 1)
-        ym = CLng(data(i, 1))     ' A列：計上年月
-        slipNo = CStr(data(i, 2)) ' B列：伝票番号
+    ' 行フィールド
+    pt.PivotFields("商品名").Orientation = xlRowField
 
-        If Not dict.Exists(slipNo) Then
-            dict.Add slipNo, ym
-        ElseIf ym < dict(slipNo) Then
-            dict(slipNo) = ym
-        End If
-    Next i
+    ' 列フィールド
+    pt.PivotFields("月").Orientation = xlColumnField
 
-    ' --- 出力用配列 ---
-    Dim result() As Variant
-    ReDim result(1 To UBound(data, 1), 1 To 1)
-
-    For i = 1 To UBound(data, 1)
-        result(i, 1) = dict(data(i, 2))
-    Next i
-
-    ' --- 一気に書き戻し ---
-    ws.Cells(1, 3).Value = "初回計上年月"
-    ws.Range("C2").Resize(UBound(result, 1), 1).Value = result
+    ' 値フィールド
+    pt.AddDataField _
+        pt.PivotFields("売上"), _
+        "売上合計", _
+        xlSum
 
 End Sub
