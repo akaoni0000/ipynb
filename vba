@@ -80,3 +80,65 @@ Sub DictLookupValue()
 
 End Sub
 
+
+
+
+抽出--------------------
+
+
+Sub 抽出_Dictionary()
+
+    Dim wbSrc As Workbook
+    Dim wsSrc As Worksheet
+    Dim wsOut As Worksheet
+    Dim wsKey As Worksheet
+
+    Set wbSrc = Workbooks("対象ブック.xlsx")
+    Set wsSrc = wbSrc.Sheets("Sheet1")     ' A列に伝票番号
+    Set wsKey = ThisWorkbook.Sheets("Key") ' 抽出したい60万件
+    Set wsOut = ThisWorkbook.Sheets("結果")
+
+    Dim lastRowSrc As Long, lastRowKey As Long
+    lastRowSrc = wsSrc.Cells(wsSrc.Rows.Count, "A").End(xlUp).Row
+    lastRowKey = wsKey.Cells(wsKey.Rows.Count, "A").End(xlUp).Row
+
+    '--- 辞書作成 ---
+    Dim dict As Object
+    Set dict = CreateObject("Scripting.Dictionary")
+
+    Dim keys As Variant
+    keys = wsKey.Range("A1:A" & lastRowKey).Value
+
+    Dim i As Long
+    For i = 1 To UBound(keys, 1)
+        If Not dict.Exists(keys(i, 1)) Then
+            dict.Add keys(i, 1), True
+        End If
+    Next i
+
+    '--- 元データを配列で処理 ---
+    Dim src As Variant
+    src = wsSrc.Range("A1").CurrentRegion.Value
+
+    Dim result()
+    ReDim result(1 To UBound(src, 1), 1 To UBound(src, 2))
+
+    Dim r As Long, outRow As Long
+    outRow = 0
+
+    For r = 2 To UBound(src, 1)
+        If dict.Exists(src(r, 1)) Then
+            outRow = outRow + 1
+            For i = 1 To UBound(src, 2)
+                result(outRow, i) = src(r, i)
+            Next i
+        End If
+    Next r
+
+    '--- 出力 ---
+    wsOut.Cells.Clear
+    wsOut.Range("A1").Resize(outRow, UBound(src, 2)).Value = result
+
+End Sub
+
+
