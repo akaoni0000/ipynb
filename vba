@@ -141,4 +141,36 @@ Sub 抽出_Dictionary()
 
 End Sub
 
+列の並び替え------------------------------------------------------------------
+Sub ReorderByHeader_WithMissing_FillHeader()
+
+    Dim headers As Variant
+    headers = Array("機器", "売上", "列C", "伝票番号", "列A")
+
+    Dim ws As Worksheet
+    Set ws = ActiveSheet
+
+    Dim i As Long
+    Dim f As Range
+
+    '① headers の数だけ先頭に空列を作る
+    ws.Columns(1).Resize(, UBound(headers) + 1).Insert Shift:=xlToRight
+
+    '② 左から順に配置
+    For i = LBound(headers) To UBound(headers)
+        Set f = ws.Rows(1).Find(headers(i), LookAt:=xlWhole)
+
+        If Not f Is Nothing Then
+            ' 見つかった列 → コピーして配置
+            f.EntireColumn.Copy ws.Columns(i + 1)
+            f.EntireColumn.Delete
+        Else
+            ' 見つからなかった列 → 見出しだけ書く
+            ws.Cells(1, i + 1).Value = headers(i)
+        End If
+    Next i
+
+End Sub
+
+
 
