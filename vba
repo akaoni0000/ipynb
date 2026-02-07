@@ -173,4 +173,30 @@ Sub ReorderByHeader_WithMissing_FillHeader()
 End Sub
 
 
+列名を抽出----------------------------------------------
+Sub GetHeaderArray()
+
+    Dim ws As Worksheet
+    Set ws = ActiveSheet   ' 必要なら Sheets("Sheet1") に変更
+
+    Dim lastCol As Long
+    lastCol = ws.Cells(1, ws.Columns.Count).End(xlToLeft).Column
+
+    Dim headers2() As String
+    Dim i As Long
+
+    ReDim headers2(1 To lastCol)
+
+    For i = 1 To lastCol
+        headers2(i) = CStr(ws.Cells(1, i).Value)
+    Next i
+
+    ' 動作確認用（イミディエイトウィンドウに出力）
+    For i = 1 To UBound(headers2)
+        Debug.Print i & " : " & headers2(i)
+    Next i
+
+End Sub
+
+
 
