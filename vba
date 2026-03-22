@@ -1,3 +1,157 @@
+
+# パワポの画像をsvg、文字起こし------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+import vtracer
+import os
+
+# 読み込むファイルのパス（ここを書き換えてください）
+input_path = "予防保守.png"
+output_path = "b.svg"
+output_pptx = "output.pptx"
+
+
+
+# svgファイル出力--------------------------------------------------------------------------------------------------------------
+# 最新の関数名 'py_convert_image_to_svg' を使用
+vtracer.convert_image_to_svg_py(
+    input_path, 
+    output_path,
+    colormode="color",
+    hierarchical="stacked",   # "stacked"（デフォルト）にすることで穴のない重なった図形を生成しパスを減らす stacked
+    mode="polygon",            # なめらかな曲線で出力 spline
+    filter_speckle=45,        # 【重要】デフォルト4。20px以下の細かいオブジェクトを無視する 45
+    color_precision=6,        # 【重要】デフォルト6。色の境界を大まかにする（下げるほど色がまとまる）
+    layer_difference=16       # 【重要】デフォルト16。グラデーションの階層をまとめる
+)
+
+print(f"変換が完了しました: {output_path}")
+
+# svgファイル出力--------------------------------------------------------------------------------------------------------------
+
+
+
+# pptxファイル出力--------------------------------------------------------------------------------------------------------------
+# 1. 画像のサイズを取得
+img = cv2.imread(input_path)
+if img is None:
+    raise FileNotFoundError(f"画像が見つかりません: {input_path}")
+height_px, width_px, _ = img.shape
+
+# 2. EasyOCRで画像から文字と座標を抜き出す
+print("文字を抽出しています...")
+reader = easyocr.Reader(['ja', 'en'])
+results = reader.readtext(input_path)
+
+# 3. PowerPointプレゼンテーションの作成
+prs = Presentation()
+
+# スライドのサイズを画像のピクセルサイズに合わせて調整
+prs.slide_width = Pt(width_px)
+prs.slide_height = Pt(height_px)  # 【修正】高さを設定（スライド外へのはみ出しを防止） [1]
+
+# 白紙のスライドレイアウトを追加
+blank_slide_layout = prs.slide_layouts[6] 
+slide = prs.slides.add_slide(blank_slide_layout)
+
+# 4. 抽出した文字をテキストボックスとして配置
+for (bbox, text, prob) in results:
+    # バウンディングボックスの座標を取得
+    (tl, tr, br, bl) = bbox
+    
+    # x, y座標と幅・高さを計算
+    x = int(tl[0])
+    y = int(tl[1])
+    w = int(tr[0] - tl[0])
+    h = int(bl[1] - tl[1])
+    
+    # pptxのテキストボックスを追加（位置とサイズを指定）
+    txBox = slide.shapes.add_textbox(Pt(x), Pt(y), Pt(w), Pt(h))
+    
+    # テキストボックスのフォーマット設定を変数に格納
+    tf = txBox.text_frame
+    
+    # テキストボックス内に文字をセット
+    tf.text = text
+    
+    # 【修正】文字が枠からはみ出ないようにする設定
+    # ① 自動で改行（折り返し）されるのを防ぐ [2]
+    tf.word_wrap = False
+    
+    # ② 文字が枠より大きい場合、枠に合わせて自動縮小する [4]
+    # tf.auto_size = MSO_AUTO_SIZE.TEXT_TO_FIT_SHAPE
+    # ② 文字が枠より大きい場合、枠に合わせて自動縮小しない [4]
+    tf.auto_size = None
+    
+    # ③ フォントサイズを枠の高さに合わせて調整する [3, 5]
+    # （※最初の段落(0番目)のフォントサイズとして指定するのが正しい文法です）
+    pt_size = h * 0.75  # ピクセル高さをフォントサイズ(pt)に概算変換
+    tf.paragraphs[0].font.size = Pt(pt_size)
+
+# 5. PowerPointファイルとして保存
+prs.save(output_pptx)
+print(f"完了しました！ {output_pptx} を保存しました。")
+
+# pptxファイル出力--------------------------------------------------------------------------------------------------------------
+
+
+
+# パワポの画像をsvg、文字起こし ここまで------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+# outlookのメール取得----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Sub GetMail()
+
+    Dim oApp As New Outlook.Application
+    
+    Dim oNs As Outlook.Namespace
+    Set oNs = oApp.GetNamespace("MAPI")
+    
+    Dim oF As Folder
+    Set oF = oNs.Folders("test@it-yobi.com").Folders("受信トレイ")
+    
+    Dim mailLists As Items
+    Set mailLists = oF.Items
+    # Set mailLists = oF.Items.Restrict("[Subject]='[重要]テストメール'")
+    
+    mailLists.Sort "[ReceivedTime]", False
+
+
+    Dim i As Long
+    For i = 1 To 3 'mailLists.Count
+        On Error Resume Next
+        Cells(i + 1, "A").Value = mailLists.Item(i).ReceivedTime
+        Cells(i + 1, "B").Value = mailLists.Item(i).SenderEmailAddress
+        Cells(i + 1, "C").Value = mailLists.Item(i).Subject
+        Cells(i + 1, "D").Value = mailLists.Item(i).Body
+    Next i
+
+End Sub
+
+# outlookのメール取得----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 重複削除------------------------------------------------------------------------
 
 Sub GetUniqueAColumn_Array2D()
