@@ -1,3 +1,59 @@
+Sub SplitSheetIntoCSV()
+    Dim wsSource As Worksheet
+    Dim wbNew As Workbook
+    Dim lastRow As Long
+    Dim i As Long, fileCount As Long
+    Dim folderPath As String
+    Dim fileName As String
+    Dim headerRange As Range
+    
+    ' --- 1. 初期設定 ---
+    Set wsSource = ActiveSheet
+    lastRow = wsSource.Cells(wsSource.Rows.Count, 1).End(xlUp).Row
+    Set headerRange = wsSource.Rows(1) ' 1行目を項目名として保持
+    
+    ' 保存先フォルダの作成（現在のブックと同じ場所）
+    folderPath = ThisWorkbook.Path & "\SplitCSV\"
+    If Dir(folderPath, vbDirectory) = "" Then MkDir folderPath
+    
+    ' 画面更新を停止して高速化
+    Application.ScreenUpdating = False
+    
+    fileCount = 1
+    
+    ' --- 2. 5行ずつループ処理（データ開始の2行目からスタート） ---
+    For i = 2 To lastRow Step 5
+        ' 新しいブックを作成
+        Set wbNew = Workbooks.Add
+        
+        ' 項目名を新しいブックの1行目にコピー
+        headerRange.Copy Destination:=wbNew.Sheets(1).Rows(1)
+        
+        ' データを5行分コピーして2行目以降に貼り付け
+        ' (i + 4 が最終行を超えないように調整)
+        wsSource.Rows(i & ":" & Application.Min(i + 4, lastRow)).Copy _
+            Destination:=wbNew.Sheets(1).Rows(2)
+        
+        ' CSVとして保存して閉じる
+        fileName = "SplitData_" & fileCount & ".csv"
+        
+        ' アラートを一時停止して上書き確認などをスキップ
+        Application.DisplayAlerts = False
+        wbNew.SaveAs Filename:=folderPath & fileName, FileFormat:=xlCSV
+        wbNew.Close SaveChanges:=False
+        Application.DisplayAlerts = True
+        
+        fileCount = fileCount + 1
+    Next i
+    
+    Application.ScreenUpdating = True
+    
+    MsgBox "分割が完了しました！" & vbCrLf & "保存先: " & folderPath
+End Sub
+
+
+
+
 
 # パワポの画像をsvg、文字起こし------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
