@@ -1,3 +1,11 @@
+' 2. B列を基準に降順 (xlDescending) でソート
+    ' Header:=xlYes は「1行目は見出しなので動かさない」という指定
+    ws.Range("A1").CurrentRegion.Sort _
+        Key1:=ws.Range("B1"), _
+        Order1:=xlDescending, _
+        Header:=xlYes
+
+
 Sub SplitSheetIntoCSV()
     Dim wsSource As Worksheet
     Dim wbNew As Workbook
